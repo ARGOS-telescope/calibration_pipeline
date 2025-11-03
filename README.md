@@ -17,6 +17,11 @@ cd ..
 
 If you have a Measurement Set already, just place the `.ms` directory inside `./data`.
 
+Download sources:
+- Direct file: `http://casa.nrao.edu/Data/EVLA/IRC10216/day2_TDEM0003_10s_norx.tar.gz`
+- NRAO Science Data Archive (search and download): `https://archive.nrao.edu` (or the new portal `https://data.nrao.edu/portal/`)
+  - Tip: search for project or source name (e.g., IRC+10216) and export the MS or UVFITS, then convert to MS if needed.
+
 ## 2) Build the Docker image
 
 The Docker image uses Ubuntu 24.04 and installs the CASA modular packages plus pre-populates `casadata` inside the image.
