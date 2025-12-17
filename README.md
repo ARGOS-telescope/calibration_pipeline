@@ -48,8 +48,7 @@ docker run --rm -it \
   casa_test \
   micromamba run -p /opt/conda/envs/casa \
   python /workspace/vla_basic_calibration.py \
-  --vis /workspace/data/data/day2_TDEM0003_10s_norx.ms \
-  --no-image
+  --vis /workspace/data/data/day2_TDEM0003_10s_norx.ms
 
 # Apple Silicon or arm64 host (add --platform)
 docker run --rm -it \
@@ -59,8 +58,7 @@ docker run --rm -it \
   casa_test \
   micromamba run -p /opt/conda/envs/casa \
   python /workspace/vla_basic_calibration.py \
-  --vis /workspace/data/data/day2_TDEM0003_10s_norx.ms \
-  --no-image
+  --vis /workspace/data/data/day2_TDEM0003_10s_norx.ms
 
 # Windows PowerShell tip: use ${PWD} instead of $PWD
 # -v "${PWD}":/workspace/data
@@ -68,12 +66,15 @@ docker run --rm -it \
 
 Notes:
 - Adjust the `--vis` path if your `.ms` lives elsewhere under the mounted `./data` directory.
-- Omit `--no-image` to run a basic `tclean` imaging step after calibration.
+- Add the `--out_dir` argument to specify a different output directory (default is `/workspace/data/outputs` inside the container), wich maps to `./data/outputs` on the host.
+- Add the `--out_file` argument to specify a different output HDF5 filename (default is `caltable_bandpass.hdf5`).
 
 ## 4) Outputs
 
 - Calibrated target MS: `calibrated_target.ms` (written in the container working directory, i.e., `/workspace`).
-- If imaging is enabled: a simple continuum image named `target_continuum.image`.
+- Bandpass calibration table in txt format: `caltable_bandpass.txt` (inside the specified output directory, default `/workspace/data/outputs`).
+- Bandpass calibration dataset in HDF5 format: `caltable_bandpass.hdf5` (inside the specified output directory).
+- Calibration plots (PNG file) inside the specified output directory. Complex calibration solutions vs frequency channel for each antenna.
 
 ## References
 
