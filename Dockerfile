@@ -41,7 +41,8 @@ RUN micromamba create -y -p /opt/conda/envs/casa python=3.12 \
        casatablebrowser==0.0.39 \
        casalogger==1.0.23 \
        casafeather==0.0.27 \
-       casampi==0.5.9
+       casampi==0.5.9 \
+       h5py==3.15.1
 
 # Pre-populate CASA external data (measures, geodetic, ephemerides) for runtime
 ENV CASADATA=/root/.casa/data
