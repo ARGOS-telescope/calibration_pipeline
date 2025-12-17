@@ -25,7 +25,6 @@ def main():
     )
     parser.add_argument("--vis", type=str, default="day2_TDEM0003_10s_norx.ms",
                         help="Input Measurement Set (.ms)")
-    parser.add_argument("--no-image", action='store_true', help="Skip imaging step")
     parser.add_argument("--out_dir", type=str, default="/workspace/data/outputs", 
                         help="Output directory for calibration tables and plots, " \
                         "default: workspace/data/data")
@@ -33,7 +32,7 @@ def main():
                         help="Output HDF5 file for calibration data")
     args = parser.parse_args()
 
-    cal_txt = calibrate_vla_dataset(vis=args.vis, do_imaging=not args.no_image, out_dir=args.out_dir)
+    cal_txt = calibrate_vla_dataset(vis=args.vis, out_dir=args.out_dir)
 
     caltable = parse_bandpass_text(cal_txt)
 

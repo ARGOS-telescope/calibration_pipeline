@@ -3,7 +3,7 @@ Utilities for calibration pipeline.
 """
 from casatasks import (
     listobs, flagdata, initweights, setjy,
-    gaincal, bandpass, fluxscale, applycal, split, tclean, listcal
+    gaincal, bandpass, fluxscale, applycal, split, listcal
 )
 from casatools import msmetadata
 
@@ -114,8 +114,8 @@ def detect_fields_by_index(vis):
     return dict(fluxcal=fluxcal, bandcal=bandcal, phasecal=phasecal, target=target)
 
 
-def calibrate_vla_dataset(vis="day2_TDEM0003_10s_norx.ms", do_imaging=True, out_dir="data"):
-    """Perform full calibration and optional imaging on the VLA dataset."""
+def calibrate_vla_dataset(vis="day2_TDEM0003_10s_norx.ms", out_dir="data"):
+    """Perform full calibration on the VLA dataset."""
     fields = detect_fields_by_index(vis)
     fluxcal = fields["fluxcal"]
     bandcal = fields["bandcal"]
@@ -134,7 +134,6 @@ def calibrate_vla_dataset(vis="day2_TDEM0003_10s_norx.ms", do_imaging=True, out_
     bcal = "bandpass.cal"
     fcal = "fluxscale.cal"
     outvis = "calibrated_target.ms"
-    image_name = "target_continuum"
     caltable_name = out_dir + "/caltable_bandpass.txt"
 
     # Reference antenna (can be automated if needed)
@@ -181,18 +180,7 @@ def calibrate_vla_dataset(vis="day2_TDEM0003_10s_norx.ms", do_imaging=True, out_
 
     print("\n=== Step 11: Export caltable ===")
     listcal(vis=vis, caltable=bcal, field=bandcal_str, listfile=caltable_name)
-    print(f"✅ Calibration table saved to {caltable_name}")
 
-    if do_imaging:
-        print("\n=== Step 12: Make basic continuum image ===")
-        tclean(vis=outvis, imagename=image_name,
-               field=target_str, spw='', specmode='mfs',
-               deconvolver='hogbom', niter=1000,
-               imsize=[512, 512], cell='1.0arcsec',
-               weighting='briggs', robust=0.5)
-
-    print(f"\n✅ Calibration complete. Output MS: {outvis}")
-    if do_imaging:
-        print(f"✅ Continuum image: {image_name}.image\n")
+    print(f"\n✅ Calibration complete. Caltable saved to {caltable_name}")
 
     return caltable_name
