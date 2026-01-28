@@ -63,7 +63,7 @@ SHELL ["/bin/bash", "-lc"]
 WORKDIR /workspace
 
 # Include the calibration script in the image
-COPY vla_basic_calibration.py /workspace/vla_basic_calibration.py
+COPY basic_calibration.py /workspace/basic_calibration.py
 
 # Default to an interactive shell; env auto-activates via bashrc
 CMD ["bash"]
