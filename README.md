@@ -1,6 +1,6 @@
 # calibration_pipeline
 
-Simple Dockerized CASA (modular) pipeline to calibrate a VLA Measurement Set using `vla_basic_calibration.py`.
+Simple Dockerized CASA (modular) pipeline to calibrate both a VLA Measurement Set or a MeerKAT Measurement Set using the `basic_calibration.py` script.
 
 ## 1) Get the example data
 
@@ -47,7 +47,7 @@ docker run --rm -it \
   -w /workspace \
   casa_test \
   micromamba run -p /opt/conda/envs/casa \
-  python /workspace/vla_basic_calibration.py \
+  python /workspace/basic_calibration.py \
   --vis /workspace/data/data/day2_TDEM0003_10s_norx.ms
 
 # Apple Silicon or arm64 host (add --platform)
@@ -57,7 +57,7 @@ docker run --rm -it \
   -w /workspace \
   casa_test \
   micromamba run -p /opt/conda/envs/casa \
-  python /workspace/vla_basic_calibration.py \
+  python /workspace/basic_calibration.py \
   --vis /workspace/data/data/day2_TDEM0003_10s_norx.ms
 
 # Windows PowerShell tip: use ${PWD} instead of $PWD
@@ -66,7 +66,7 @@ docker run --rm -it \
 
 Notes:
 - Adjust the `--vis` path if your `.ms` lives elsewhere under the mounted `./data` directory.
-- Add the `--out_dir` argument to specify a different output directory. The default value is `outputs` (`/workspace/data/outputs` inside the container wich maps to `$PWD/outputs` on the host.
+- Add the `--out_dir` argument to specify a different output directory. The default directory is `outputs` (`/workspace/data/outputs` inside the container wich maps to `$PWD/outputs` on the host).
 - Add the `--out_file` argument to specify a different output HDF5 filename (default is `caltable_bandpass.hdf5`).
 
 ## 4) Outputs
