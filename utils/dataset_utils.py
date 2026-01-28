@@ -153,6 +153,18 @@ def parse_bandpass_text(file):
 
     return caltable
 
+def detect_flagged_channels(caltable):
+    flagged = []
+    for i in range(2, len(caltable)):  # Start from line 2 (skip headers)
+        line = caltable[i]
+        parts = line.split('|', 1)
+        if len(parts) > 1 and 'F' in parts[1]:
+            flagged.append(1)
+        else:
+            flagged.append(0)
+    
+    return np.array(flagged)
+
 def caltable_to_dict(table, npol=2):
     """
     Parse formatted CASA bandpass calibration output into a structured 
@@ -177,16 +189,14 @@ def caltable_to_dict(table, npol=2):
         }
     """
 
-    # ------------------------------------------------------------------
-    # 1) Extract antenna names
-    # ------------------------------------------------------------------
+    # Extract antenna names
     antennas = get_antenna_names(table)
     nants = len(antennas)
 
-    # ------------------------------------------------------------------
-    # 2) Extract data lines
-    # ------------------------------------------------------------------
-    # Expected structure: hh:mm:ss.sss <space> field_name <space> chan| data...
+    # Detect flagged channels
+    flagged_chn = detect_flagged_channels(table)
+
+    # Extract data lines, expected structure: hh:mm:ss.sss <space> field_name <space> chan| data...
     data_re = re.compile(r"(\S+)\s+(\S+)\s+(\d+)\|(.*)")
     times = []
     fields = []
@@ -229,9 +239,7 @@ def caltable_to_dict(table, npol=2):
         fields.append(field)
         channel_list.append(ch)
 
-    # ------------------------------------------------------------------
-    # 3) Convert to numpy arrays
-    # ------------------------------------------------------------------
+    # Convert to numpy arrays
     times = np.unique(np.array(times))
     fields = np.unique(np.array(fields))
     if len(times) * len(fields) != 1:
@@ -243,9 +251,7 @@ def caltable_to_dict(table, npol=2):
 
     nchans = len(np.unique(channels))
 
-    # ------------------------------------------------------------------
-    # 4) Reshape into (ntime, nants, nchans, npol)
-    # ------------------------------------------------------------------
+    # Reshape into (ntime, nants, nchans, npol)
     # Channels typically appear sorted, but we sort by channel index:
     sort_idx = np.argsort(channels)
     amp = amp[sort_idx]
@@ -261,24 +267,18 @@ def caltable_to_dict(table, npol=2):
     # Now (nants, nchans, npol)
     gains = gains.swapaxes(0, 1)  
     
-    # ------------------------------------------------------------------
     # Final dictionary
-    # ------------------------------------------------------------------
     result = {
         "gains": gains,                       # complex array
         "antennas": antennas,
         "channels": channels,
         "polarizations": ["pol0", "pol1"],
         "times": times,
-        "fields": fields
+        "fields": fields,
+        "flagged_channels": flagged_chn
     }
 
     return result
-
-
-###############################################################################
-# 2) SAVE THE DICTIONARY TO HDF5
-###############################################################################
 
 def save_bandpass_hdf5(filename, caldict):
     """
@@ -292,6 +292,7 @@ def save_bandpass_hdf5(filename, caldict):
     pols = caldict["polarizations"]
     times = caldict["times"]
     fields = caldict["fields"]
+    flags = caldict["flagged_channels"]
 
     with h5py.File(filename, "w") as f:
 
@@ -302,10 +303,10 @@ def save_bandpass_hdf5(filename, caldict):
         grp.create_dataset("POLARIZATION", data=np.array(pols, dtype='S'))
         grp.create_dataset("TIME", data=np.array(times, dtype='S'))
         grp.create_dataset("FIELD", data=np.array(fields, dtype='S'))
+        grp.create_dataset("FLAG", data=flags)
 
         ggrp = grp.create_group("GAIN")
         ggrp.create_dataset("CPARAM", data=gains)
-        # ggrp.create_dataset("FLAG", data=flags)
 
     print("Saved:", filename)
 
@@ -331,9 +332,12 @@ def plot_cal_data(hdf5_file_path, out_dir="." ,pol=0):
     f = h5py.File(hdf5_file_path, "r")
 
     gains = np.array(f['CALIBRATION/BANDPASS']['GAIN/CPARAM'])[:,:,pol]
+    flags = f['CALIBRATION/BANDPASS']['FLAG'][:]
+    # Select unflagged channels
+    chn_idx = np.array(np.where(flags==0))[0]
 
     # index by maximum gain
-    order = np.argsort(np.mean(gains, axis=1))
+    order = np.argsort(np.mean(np.abs(gains[:,chn_idx]), axis=(1)))
 
     # color map for each antenna
     colors = plt.cm.viridis(np.linspace(0, 1, len(f['CALIBRATION/BANDPASS']['ANTENNA'])))
@@ -341,12 +345,15 @@ def plot_cal_data(hdf5_file_path, out_dir="." ,pol=0):
     plt.figure(figsize=(12,5))
     for i, order_i in enumerate(order):
         antenna = f['CALIBRATION/BANDPASS']['ANTENNA'][order_i]
+        amplitude = np.abs(gains[order_i,chn_idx])
+        phase = np.angle(gains[order_i,chn_idx])
+        unwrap_phase = np.unwrap(phase)
         plt.subplot(1,2,1)
-        plt.plot(np.abs(gains[order_i,:]), label=antenna.decode(), color=colors[i])
+        plt.plot(chn_idx, amplitude, label=antenna.decode(), color=colors[i], alpha=0.7)
         plt.title("Amplitude")
         plt.xlabel("Channel Index")
         plt.subplot(1,2,2)
-        plt.plot(np.angle(gains[order_i,:])/np.pi*180, label=antenna.decode(), color=colors[i])
+        plt.plot(chn_idx, unwrap_phase/np.pi*180, label=antenna.decode(), color=colors[i], alpha=0.7)
         plt.title("Phase (degrees)")
         plt.xlabel("Channel Index")
         
