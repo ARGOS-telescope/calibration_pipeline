@@ -14,7 +14,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'data', 'utils')))
 
-from cal_utils import calibrate_vla_dataset
+from cal_utils import calibrate_vla_dataset, calibrate_meerkat_dataset
 from dataset_utils import parse_bandpass_text, caltable_to_dict, save_bandpass_hdf5, plot_cal_data
 
 
@@ -33,8 +33,13 @@ def main():
     parser.add_argument("--base_dir", type=str, default="/workspace/data")
     args = parser.parse_args()
 
-    cal_txt = calibrate_vla_dataset(vis=args.vis, out_dir=args.base_dir + "/" + args.out_dir)
-
+    if args.vis == "/workspace/data/data/day2_TDEM0003_10s_norx.ms":
+        cal_txt = calibrate_vla_dataset(vis=args.vis, out_dir=args.base_dir + "/" + args.out_dir)
+    elif args.vis == "/workspace/data/data/1766058131-sdp-l0_2026-01-15T11-39-25_a25.ms":
+        cal_txt = calibrate_meerkat_dataset(vis=args.vis, out_dir=args.base_dir + "/" + args.out_dir)
+    else:
+        raise ValueError("Unsupported Measurement Set for automatic calibration.")
+    
     caltable = parse_bandpass_text(cal_txt)
 
     caldict = caltable_to_dict(caltable)
