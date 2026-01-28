@@ -184,3 +184,51 @@ def calibrate_vla_dataset(vis="day2_TDEM0003_10s_norx.ms", out_dir="data"):
     print(f"\n✅ Calibration complete. Caltable saved to {caltable_name}")
 
     return caltable_name
+
+
+def calibrate_meerkat_dataset(vis="1766058131-sdp-l0_2026-01-15T11-39-25_a25.ms", out_dir="data"):
+    """Perform calibration on the MeerKAT dataset."""
+    # The MeerKAT calibration dataset contains a single field
+    fluxcal_str = "0"
+    bandcal_str = "0"
+
+    # Calibration table names
+    gcal_bp_p = "gaincal_bp_p.cal"
+    gcal_ap_comb = "gaincal_ap_comb.cal"
+    bcal = "bandpass.cal"
+    caltable_name = out_dir + "/caltable_bandpass.txt"
+
+    # Reference antenna (can be automated if needed)
+    refant = "m000"
+
+    print("\n=== Step 1: Inspect observation summary ===")
+    listobs(vis=vis, listfile="listobs.txt", overwrite=True)
+
+    print("\n=== Step 2: Basic flagging ===")
+    flagdata(vis=vis, mode='manual', autocorr=True)
+    flagdata(vis=vis, mode='shadow', flagbackup=False)
+
+    print("\n=== Step 3: Initialise weights ===")
+    initweights(vis=vis, wtmode='nyq', dowtsp=True)
+
+    print("\n=== Step 4: Set flux model ===")
+    setjy(vis=vis, field=fluxcal_str, standard='Perley-Butler 2010')
+
+    print("\n=== Step 5: Solve for phase-only gains on bandpass calibrator ===")
+    gaincal(vis=vis, caltable=gcal_bp_p, field=bandcal_str, solint='int',
+            refant=refant, calmode='p')
+
+    print("\n=== Step 6: Solve for bandpass ===")
+    bandpass(vis=vis, caltable=bcal, field=bandcal_str, solint='inf',
+             combine='scan', refant=refant, gaintable=[gcal_bp_p])
+
+    print("\n=== Step 7: Solve for complex gains on flux and phase calibrators (combined) ===")
+    gaincal(vis=vis, caltable=gcal_ap_comb, field=fluxcal_str, solint='int',
+            refant=refant, calmode='ap', gaintable=[bcal])
+
+    print("\n=== Step 8: Export caltable ===")
+    listcal(vis=vis, caltable=bcal, field=bandcal_str, listfile=caltable_name)
+
+    print(f"\n✅ Calibration complete. Caltable saved to {caltable_name}")
+
+    return caltable_name
