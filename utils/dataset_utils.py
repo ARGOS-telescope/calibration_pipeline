@@ -139,7 +139,7 @@ def parse_bandpass_text(file):
     solutions = extract_solutions(file)
     if len(solutions) > 1:
         print("Found " + str(len(solutions)) + " solutions. Processing the first solution...")
-        sol = solutions[0]
+    sol = solutions[0]
 
     sol = remove_newline_chars(sol)
 
