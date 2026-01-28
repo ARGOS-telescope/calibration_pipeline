@@ -25,22 +25,23 @@ def main():
     )
     parser.add_argument("--vis", type=str, default="day2_TDEM0003_10s_norx.ms",
                         help="Input Measurement Set (.ms)")
-    parser.add_argument("--out_dir", type=str, default="/workspace/data/outputs", 
+    parser.add_argument("--out_dir", type=str, default="outputs", 
                         help="Output directory for calibration tables and plots, " \
                         "default: workspace/data/data")
     parser.add_argument("--out_file", type=str, default="caltable_bandpass.hdf5", 
                         help="Output HDF5 file for calibration data")
+    parser.add_argument("--base_dir", type=str, default="/workspace/data")
     args = parser.parse_args()
 
-    cal_txt = calibrate_vla_dataset(vis=args.vis, out_dir=args.out_dir)
+    cal_txt = calibrate_vla_dataset(vis=args.vis, out_dir=args.base_dir + "/" + args.out_dir)
 
     caltable = parse_bandpass_text(cal_txt)
 
     caldict = caltable_to_dict(caltable)
 
-    save_bandpass_hdf5(args.out_dir + "/" + args.out_file, caldict)
+    save_bandpass_hdf5(args.base_dir + "/" + args.out_dir + "/" + args.out_file, caldict)
 
-    plot_cal_data(args.out_dir + "/" + args.out_file, args.out_dir)
+    plot_cal_data(args.base_dir + "/" + args.out_dir + "/" + args.out_file, args.base_dir + "/" + args.out_dir)
 
 if __name__ == "__main__":
     main()

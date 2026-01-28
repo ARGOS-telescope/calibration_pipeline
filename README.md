@@ -66,7 +66,7 @@ docker run --rm -it \
 
 Notes:
 - Adjust the `--vis` path if your `.ms` lives elsewhere under the mounted `./data` directory.
-- Add the `--out_dir` argument to specify a different output directory (default is `/workspace/data/outputs` inside the container), wich maps to `./data/outputs` on the host.
+- Add the `--out_dir` argument to specify a different output directory. The default value is `outputs` (`/workspace/data/outputs` inside the container wich maps to `$PWD/outputs` on the host.
 - Add the `--out_file` argument to specify a different output HDF5 filename (default is `caltable_bandpass.hdf5`).
 
 ## 4) Outputs
