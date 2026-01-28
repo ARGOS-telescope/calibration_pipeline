@@ -356,7 +356,7 @@ def plot_cal_data(hdf5_file_path, out_dir="." ,pol=0):
         plt.plot(chn_idx, unwrap_phase/np.pi*180, label=antenna.decode(), color=colors[i], alpha=0.7)
         plt.title("Phase (degrees)")
         plt.xlabel("Channel Index")
-        
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # if too many antennas, put legend in double column
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', ncol=len(order)//25+1)
     plt.tight_layout()
     plt.savefig(out_dir + "/bandpass_calibration_plot.png")
