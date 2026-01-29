@@ -197,9 +197,10 @@ def calibrate_meerkat_dataset(vis="1766058131-sdp-l0_2026-01-15T11-39-25_a25.ms"
     gcal_ap_comb = "gaincal_ap_comb.cal"
     bcal = "bandpass.cal"
     caltable_name = out_dir + "/caltable_bandpass.txt"
+    gcal_delay = "delay.cal"
 
     # Reference antenna (can be automated if needed)
-    refant = "m000"
+    refant = "m063"
 
     print("\n=== Step 1: Inspect observation summary ===")
     listobs(vis=vis, listfile="listobs.txt", overwrite=True)
@@ -207,6 +208,13 @@ def calibrate_meerkat_dataset(vis="1766058131-sdp-l0_2026-01-15T11-39-25_a25.ms"
     print("\n=== Step 2: Basic flagging ===")
     flagdata(vis=vis, mode='manual', autocorr=True)
     flagdata(vis=vis, mode='shadow', flagbackup=False)
+    flagdata(vis=vis, mode='manual', spw='0:0~10')
+    flagdata(vis=vis, mode='manual', spw='0:119')
+    flagdata(vis=vis, mode='manual', spw='0:166~182')
+    flagdata(vis=vis, mode='manual', spw='0:252')
+    flagdata(vis=vis, mode='manual', spw='0:320')
+    flagdata(vis=vis, mode='manual', spw='0:609')
+    flagdata(vis=vis, mode='manual', spw='0:768')
 
     print("\n=== Step 3: Initialise weights ===")
     initweights(vis=vis, wtmode='nyq', dowtsp=True)
@@ -214,19 +222,23 @@ def calibrate_meerkat_dataset(vis="1766058131-sdp-l0_2026-01-15T11-39-25_a25.ms"
     print("\n=== Step 4: Set flux model ===")
     setjy(vis=vis, field=fluxcal_str, standard='Perley-Butler 2010')
 
-    print("\n=== Step 5: Solve for phase-only gains on bandpass calibrator ===")
+    print("\n=== Step 5: Solve for delays on bandpass calibrator ===")
+    gaincal(vis=vis, caltable=gcal_delay, field=bandcal_str,
+    solint='inf', refant=refant, gaintype='K')
+
+    print("\n=== Step 6: Solve for phase-only gains on bandpass calibrator ===")
     gaincal(vis=vis, caltable=gcal_bp_p, field=bandcal_str, solint='int',
-            refant=refant, calmode='p')
+            refant=refant, calmode='p', gaintable=[gcal_delay])
 
-    print("\n=== Step 6: Solve for bandpass ===")
+    print("\n=== Step 7: Solve for bandpass ===")
     bandpass(vis=vis, caltable=bcal, field=bandcal_str, solint='inf',
-             combine='scan', refant=refant, gaintable=[gcal_bp_p])
+             combine='scan', refant=refant, gaintable=[gcal_delay, gcal_bp_p])
 
-    print("\n=== Step 7: Solve for complex gains on flux and phase calibrators (combined) ===")
+    print("\n=== Step 8: Solve for complex gains on flux and phase calibrators (combined) ===")
     gaincal(vis=vis, caltable=gcal_ap_comb, field=fluxcal_str, solint='int',
-            refant=refant, calmode='ap', gaintable=[bcal])
+            refant=refant, calmode='ap', gaintable=[gcal_delay, bcal])
 
-    print("\n=== Step 8: Export caltable ===")
+    print("\n=== Step 9: Export caltable ===")
     listcal(vis=vis, caltable=bcal, field=bandcal_str, listfile=caltable_name)
 
     print(f"\n✅ Calibration complete. Caltable saved to {caltable_name}")
